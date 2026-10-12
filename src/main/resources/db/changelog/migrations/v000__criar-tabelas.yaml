@@ -1,0 +1,270 @@
+databaseChangeLog:
+  - changeSet:
+      id: v000-criar-tabela-universidade
+      author: Diego Casemiro
+      changes:
+        - createTable:
+            schemaName: ${schema}
+            tableName: universidade
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    primaryKeyName: pk_universidade
+              - column:
+                  name: nome
+                  type: VARCHAR(150)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: cidade
+                  type: VARCHAR(100)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: estado
+                  type: VARCHAR(2)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: criado_em
+                  type: TIMESTAMP
+                  constraints:
+                    nullable: false
+              - column:
+                  name: atualizado_em
+                  type: TIMESTAMP
+              - column:
+                  name: deletado_em
+                  type: TIMESTAMP
+
+  - changeSet:
+      id: v000-criar-tabela-materia
+      author: Diego Casemiro
+      changes:
+        - createTable:
+            schemaName: ${schema}
+            tableName: materia
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    primaryKeyName: pk_materia
+              - column:
+                  name: nome
+                  type: VARCHAR(100)
+                  constraints:
+                    nullable: false
+                    unique: true
+                    uniqueConstraintName: uk_materia_nome
+              - column:
+                  name: criado_em
+                  type: TIMESTAMP
+                  constraints:
+                    nullable: false
+              - column:
+                  name: atualizado_em
+                  type: TIMESTAMP
+              - column:
+                  name: deletado_em
+                  type: TIMESTAMP
+
+  - changeSet:
+      id: v000-criar-tabela-endereco
+      author: Diego Casemiro
+      changes:
+        - createTable:
+            schemaName: ${schema}
+            tableName: endereco
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    primaryKeyName: pk_endereco
+              - column:
+                  name: rua
+                  type: VARCHAR(150)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: numero
+                  type: VARCHAR(10)
+              - column:
+                  name: complemento
+                  type: VARCHAR(100)
+              - column:
+                  name: bairro
+                  type: VARCHAR(100)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: cidade
+                  type: VARCHAR(100)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: estado
+                  type: VARCHAR(2)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: pais
+                  type: VARCHAR(60)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: cep
+                  type: VARCHAR(8)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: criado_em
+                  type: TIMESTAMP
+                  constraints:
+                    nullable: false
+              - column:
+                  name: atualizado_em
+                  type: TIMESTAMP
+              - column:
+                  name: deletado_em
+                  type: TIMESTAMP
+
+  - changeSet:
+      id: v000-criar-tabela-usuario
+      author: Diego Casemiro
+      changes:
+        - createTable:
+            schemaName: ${schema}
+            tableName: usuario
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    primaryKeyName: pk_usuario
+              - column:
+                  name: keycloak_id
+                  type: UUID
+                  constraints:
+                    nullable: false
+                    unique: true
+                    uniqueConstraintName: uk_usuario_keycloak_id
+              - column:
+                  name: nome
+                  type: VARCHAR(150)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: cpf
+                  type: VARCHAR(11)
+                  constraints:
+                    nullable: false
+                    unique: true
+                    uniqueConstraintName: uk_usuario_cpf
+              - column:
+                  name: email
+                  type: VARCHAR(150)
+                  constraints:
+                    nullable: false
+                    unique: true
+                    uniqueConstraintName: uk_usuario_email
+              - column:
+                  name: telefone
+                  type: VARCHAR(11)
+              - column:
+                  name: permissao
+                  type: VARCHAR(20)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: endereco_id
+                  type: BIGINT
+                  constraints:
+                    unique: true
+                    uniqueConstraintName: uk_usuario_endereco_id
+                    foreignKeyName: fk_usuario_endereco
+                    referencedTableSchemaName: ${schema}
+                    referencedTableName: endereco
+                    referencedColumnNames: id
+              - column:
+                  name: universidade_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_usuario_universidade
+                    referencedTableSchemaName: ${schema}
+                    referencedTableName: universidade
+                    referencedColumnNames: id
+              - column:
+                  name: criado_em
+                  type: TIMESTAMP
+                  constraints:
+                    nullable: false
+              - column:
+                  name: atualizado_em
+                  type: TIMESTAMP
+              - column:
+                  name: deletado_em
+                  type: TIMESTAMP
+        - sql:
+            sql: ALTER TABLE ${schema}.usuario ADD CONSTRAINT ck_usuario_permissao CHECK (permissao IN ('ADMIN', 'PROFESSOR', 'DIRETOR'));
+        - createIndex:
+            schemaName: ${schema}
+            tableName: usuario
+            indexName: idx_usuario_universidade_id
+            columns:
+              - column:
+                  name: universidade_id
+      rollback:
+        - dropTable:
+            schemaName: ${schema}
+            tableName: usuario
+
+  - changeSet:
+      id: v000-criar-tabela-usuario-materia
+      author: Diego Casemiro
+      changes:
+        - createTable:
+            schemaName: ${schema}
+            tableName: usuario_materia
+            columns:
+              - column:
+                  name: usuario_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+                    primaryKey: true
+                    primaryKeyName: pk_usuario_materia
+                    foreignKeyName: fk_usuario_materia_usuario
+                    referencedTableSchemaName: ${schema}
+                    referencedTableName: usuario
+                    referencedColumnNames: id
+              - column:
+                  name: materia_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+                    primaryKey: true
+                    primaryKeyName: pk_usuario_materia
+                    foreignKeyName: fk_usuario_materia_materia
+                    referencedTableSchemaName: ${schema}
+                    referencedTableName: materia
+                    referencedColumnNames: id
+        - createIndex:
+            schemaName: ${schema}
+            tableName: usuario_materia
+            indexName: idx_usuario_materia_materia_id
+            columns:
+              - column:
+                  name: materia_id
