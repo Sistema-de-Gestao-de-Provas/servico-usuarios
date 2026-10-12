@@ -33,6 +33,7 @@ public class SecurityConfig {
                         // Cadastro público: o próprio serviço cria o usuário no Keycloak
                         .requestMatchers(HttpMethod.POST, "/v1/usuarios").permitAll()
                         .requestMatchers("/actuator/health").permitAll()
+                        .requestMatchers("/error").permitAll()
                         .anyRequest().authenticated())
                 .oauth2ResourceServer(oauth2 -> oauth2
                         .jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthenticationConverter())))

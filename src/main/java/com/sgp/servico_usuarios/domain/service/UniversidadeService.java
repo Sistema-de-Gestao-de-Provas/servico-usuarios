@@ -3,6 +3,7 @@
  */
 package com.sgp.servico_usuarios.domain.service;
 
+import com.sgp.servico_usuarios.domain.exception.RecursoNaoEncontradoException;
 import com.sgp.servico_usuarios.api.dto.request.UniversidadeRequest;
 import com.sgp.servico_usuarios.api.dto.response.UniversidadeResponse;
 import com.sgp.servico_usuarios.domain.entity.Universidade;
@@ -12,10 +13,8 @@ import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.server.ResponseStatusException;
 
 /**
  *
@@ -40,7 +39,7 @@ public class UniversidadeService {
     
     public Universidade buscarOuFalhar(Long id) {
         return universidadeRepository.findByIdAndDeletadoEmIsNull(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Universidade " + id + " não encontrada"));
+                .orElseThrow(() -> new RecursoNaoEncontradoException("universidade.nao-encontrada", String.valueOf(id)));
     }
 
     @Transactional

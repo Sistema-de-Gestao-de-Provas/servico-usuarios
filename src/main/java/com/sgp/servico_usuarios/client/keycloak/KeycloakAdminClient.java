@@ -3,6 +3,8 @@
  */
 package com.sgp.servico_usuarios.client.keycloak;
 
+import com.sgp.servico_usuarios.domain.exception.ConflitoException;
+import com.sgp.servico_usuarios.domain.exception.ServicoExternoException;
 import com.sgp.servico_usuarios.config.keycloak.KeycloakProperties;
 import java.net.URI;
 import java.time.Duration;
@@ -22,7 +24,6 @@ import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientException;
-import org.springframework.web.server.ResponseStatusException;
 
 /**
  *
@@ -67,7 +68,7 @@ public class KeycloakAdminClient {
                 .body(usuario)
                 .retrieve()
                 .onStatus(status -> status.isSameCodeAs(HttpStatus.CONFLICT), (request, response) -> {
-                    throw new ResponseStatusException(HttpStatus.CONFLICT, "Já existe um usuário com o e-mail " + email);
+                    throw new ConflitoException("usuario.email-ja-cadastrado", email);
                 })
                 .toBodilessEntity()
                 .getHeaders()
@@ -150,7 +151,7 @@ public class KeycloakAdminClient {
                 .body(usuario)
                 .retrieve()
                 .onStatus(status -> status.isSameCodeAs(HttpStatus.CONFLICT), (request, response) -> {
-                    throw new ResponseStatusException(HttpStatus.CONFLICT, "Já existe um usuário com o e-mail " + email);
+                    throw new ConflitoException("usuario.email-ja-cadastrado", email);
                 })
                 .toBodilessEntity());
     }
@@ -196,7 +197,7 @@ public class KeycloakAdminClient {
             return chamada.get();
         } catch (RestClientException ex) {
             log.error("Erro ao chamar a Admin API do Keycloak", ex);
-            throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, "O serviço de autenticação está indisponível");
+            throw new ServicoExternoException("keycloak.indisponivel");
         }
     }
 }

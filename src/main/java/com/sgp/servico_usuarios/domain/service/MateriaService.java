@@ -3,6 +3,8 @@
  */
 package com.sgp.servico_usuarios.domain.service;
 
+import com.sgp.servico_usuarios.domain.exception.ConflitoException;
+import com.sgp.servico_usuarios.domain.exception.RecursoNaoEncontradoException;
 import com.sgp.servico_usuarios.api.dto.request.MateriaRequest;
 import com.sgp.servico_usuarios.api.dto.response.MateriaResponse;
 import com.sgp.servico_usuarios.domain.entity.Materia;
@@ -11,10 +13,8 @@ import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
 import java.util.HashSet;
@@ -44,7 +44,7 @@ public class MateriaService {
 
     public Materia buscarOuFalhar(Long id) {
         return materiaRepository.findByIdAndDeletadoEmIsNull(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Matéria " + id + " não encontrada"));
+                .orElseThrow(() -> new RecursoNaoEncontradoException("materia.nao-encontrada", String.valueOf(id)));
     }
 
     public Set<Materia> buscarMaterias(Set<Long> ids) {
@@ -58,7 +58,7 @@ public class MateriaService {
                     .filter(id -> !encontrados.contains(id))
                     .map(String::valueOf)
                     .collect(Collectors.joining(", "));
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Matérias não encontradas: " + faltantes);
+            throw new RecursoNaoEncontradoException("materia.nao-encontrada", faltantes);
         }
         return materias;
     }
@@ -66,7 +66,7 @@ public class MateriaService {
     @Transactional
     public MateriaResponse criar(MateriaRequest request) {
         if (materiaRepository.existsByNomeIgnoreCase(request.getNome())) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "Já existe uma matéria com o nome " + request.getNome());
+            throw new ConflitoException("materia.nome-ja-cadastrado", request.getNome());
         }
         Materia materia = modelMapper.map(request, Materia.class);
         return toResponse(materiaRepository.save(materia));
@@ -76,7 +76,7 @@ public class MateriaService {
     public MateriaResponse atualizar(Long id, MateriaRequest request) {
         Materia materia = buscarOuFalhar(id);
         if (materiaRepository.existsByNomeIgnoreCaseAndIdNot(request.getNome(), id)) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "Já existe uma matéria com o nome " + request.getNome());
+            throw new ConflitoException("materia.nome-ja-cadastrado", request.getNome());
         }
         modelMapper.map(request, materia);
         return toResponse(materiaRepository.save(materia));
