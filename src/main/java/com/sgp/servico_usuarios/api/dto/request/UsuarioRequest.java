@@ -3,22 +3,19 @@
  */
 package com.sgp.servico_usuarios.api.dto.request;
 
+import com.sgp.servico_usuarios.domain.enums.Permissao;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Pattern;
-import jakarta.validation.constraints.Size;
-import java.util.Set;
+import jakarta.validation.constraints.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+
+import java.util.Set;
 
 /**
  *
  * @author diego-casemiro
  */
-// keycloakId e permissao não vêm no corpo: são lidos do token do usuário autenticado
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -37,8 +34,16 @@ public class UsuarioRequest {
     @Size(max = 150)
     private String email;
 
+    // Enviada só para o Keycloak, nunca gravada no banco do serviço.
+    // Obrigatória no cadastro; na atualização, vazia mantém a senha atual
+    @Size(min = 8, max = 128)
+    private String senha;
+
     @Pattern(regexp = "\\d{10,11}", message = "deve conter DDD e número, sem pontuação")
     private String telefone;
+
+    // Só um ADMIN pode definir, e só no cadastro; sem valor, o usuário é cadastrado como PROFESSOR
+    private Permissao permissao;
 
     @Valid
     private EnderecoRequest endereco;
