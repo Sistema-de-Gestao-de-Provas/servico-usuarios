@@ -12,4 +12,8 @@ import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
  * @author diego-casemiro
  */
 public interface MateriaRepository extends JpaRepository<Materia, Long>, JpaSpecificationExecutor<Materia> {
+
+    boolean existsByNomeIgnoreCase(String nome);
+
+    boolean existsByNomeIgnoreCaseAndIdNot(String nome, Long id);
 }
