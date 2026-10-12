@@ -23,8 +23,6 @@ public interface UsuarioRepository extends JpaRepository<Usuario, Long>, JpaSpec
 
     Optional<Usuario> findByKeycloakIdAndDeletadoEmIsNull(UUID keycloakId);
 
-    boolean existsByKeycloakId(UUID keycloakId);
-
     boolean existsByEmail(String email);
 
     boolean existsByCpf(String cpf);
