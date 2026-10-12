@@ -16,6 +16,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -33,7 +34,7 @@ public class MateriaService {
 
     @Transactional(readOnly = true)
     public Page<MateriaResponse> listar(Pageable pageable) {
-        return materiaRepository.findAll(pageable).map(this::toResponse);
+        return materiaRepository.findAllByDeletadoEmIsNull(pageable).map(this::toResponse);
     }
 
     @Transactional(readOnly = true)
@@ -42,7 +43,7 @@ public class MateriaService {
     }
 
     public Materia buscarOuFalhar(Long id) {
-        return materiaRepository.findById(id)
+        return materiaRepository.findByIdAndDeletadoEmIsNull(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Matéria " + id + " não encontrada"));
     }
 
@@ -50,7 +51,7 @@ public class MateriaService {
         if (ids == null || ids.isEmpty()) {
             return new HashSet<>();
         }
-        Set<Materia> materias = new HashSet<>(materiaRepository.findAllById(ids));
+        Set<Materia> materias = new HashSet<>(materiaRepository.findAllByIdInAndDeletadoEmIsNull(ids));
         if (materias.size() != ids.size()) {
             Set<Long> encontrados = materias.stream().map(Materia::getId).collect(Collectors.toSet());
             String faltantes = ids.stream()
@@ -81,10 +82,11 @@ public class MateriaService {
         return toResponse(materiaRepository.save(materia));
     }
 
-    // Soft delete: o @SoftDelete da entidade transforma o DELETE em UPDATE de deletado_em
     @Transactional
     public void remover(Long id) {
-        materiaRepository.delete(buscarOuFalhar(id));
+        Materia materia = buscarOuFalhar(id);
+        materia.setDeletadoEm(LocalDateTime.now());
+        materiaRepository.save(materia);
     }
 
     private MateriaResponse toResponse(Materia materia) {

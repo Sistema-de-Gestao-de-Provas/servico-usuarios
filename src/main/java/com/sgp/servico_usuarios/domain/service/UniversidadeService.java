@@ -7,6 +7,7 @@ import com.sgp.servico_usuarios.api.dto.request.UniversidadeRequest;
 import com.sgp.servico_usuarios.api.dto.response.UniversidadeResponse;
 import com.sgp.servico_usuarios.domain.entity.Universidade;
 import com.sgp.servico_usuarios.domain.repository.UniversidadeRepository;
+import java.time.LocalDateTime;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Page;
@@ -29,7 +30,7 @@ public class UniversidadeService {
 
     @Transactional(readOnly = true)
     public Page<UniversidadeResponse> listar(Pageable pageable) {
-        return universidadeRepository.findAll(pageable).map(this::toResponse);
+        return universidadeRepository.findAllByDeletadoEmIsNull(pageable).map(this::toResponse);
     }
 
     @Transactional(readOnly = true)
@@ -38,7 +39,7 @@ public class UniversidadeService {
     }
     
     public Universidade buscarOuFalhar(Long id) {
-        return universidadeRepository.findById(id)
+        return universidadeRepository.findByIdAndDeletadoEmIsNull(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Universidade " + id + " não encontrada"));
     }
 
@@ -55,10 +56,11 @@ public class UniversidadeService {
         return toResponse(universidadeRepository.save(universidade));
     }
 
-    // Soft delete: o @SoftDelete da entidade transforma o DELETE em UPDATE de deletado_em
     @Transactional
     public void remover(Long id) {
-        universidadeRepository.delete(buscarOuFalhar(id));
+        Universidade universidade = buscarOuFalhar(id);
+        universidade.setDeletadoEm(LocalDateTime.now());
+        universidadeRepository.save(universidade);
     }
 
     private UniversidadeResponse toResponse(Universidade universidade) {

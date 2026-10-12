@@ -18,6 +18,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 /**
@@ -35,7 +36,7 @@ public class UsuarioService {
 
     @Transactional(readOnly = true)
     public Page<UsuarioResponse> listar(Pageable pageable) {
-        return usuarioRepository.findAll(pageable).map(this::toResponse);
+        return usuarioRepository.findAllByDeletadoEmIsNull(pageable).map(this::toResponse);
     }
 
     @Transactional(readOnly = true)
@@ -44,13 +45,13 @@ public class UsuarioService {
     }
 
     private Usuario buscarOuFalhar(Long id) {
-        return usuarioRepository.findById(id)
+        return usuarioRepository.findByIdAndDeletadoEmIsNull(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuário " + id + " não encontrado"));
     }
 
     @Transactional(readOnly = true)
     public UsuarioResponse buscarPorKeycloakId(UUID keycloakId) {
-        Usuario usuario = usuarioRepository.findByKeycloakId(keycloakId)
+        Usuario usuario = usuarioRepository.findByKeycloakIdAndDeletadoEmIsNull(keycloakId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "O usuário autenticado não possui cadastro"));
         return toResponse(usuario);
     }
@@ -87,14 +88,17 @@ public class UsuarioService {
         return toResponse(usuarioRepository.save(usuario));
     }
 
-    // Soft delete: o @SoftDelete da entidade transforma o DELETE em UPDATE de deletado_em
     @Transactional
     public void remover(Long id) {
-        usuarioRepository.delete(buscarOuFalhar(id));
+        Usuario usuario = buscarOuFalhar(id);
+        LocalDateTime agora = LocalDateTime.now();
+        usuario.setDeletadoEm(agora);
+        if (usuario.getEndereco() != null) {
+            usuario.getEndereco().setDeletadoEm(agora);
+        }
+        usuarioRepository.save(usuario);
     }
 
-    // Mapeado à mão: com a estratégia STRICT, o ModelMapper ligaria universidadeId a universidade.id
-    // e sobrescreveria o id da universidade já carregada, em vez de trocar a universidade do usuário
     private void aplicarRequest(Usuario usuario, UsuarioRequest request) {
         usuario.setNome(request.getNome());
         usuario.setCpf(request.getCpf());
