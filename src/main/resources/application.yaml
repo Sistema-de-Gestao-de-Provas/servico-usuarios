@@ -25,6 +25,10 @@ spring:
     liquibase-schema: public
     parameters:
       schema: ${spring.liquibase.default-schema}
+  # Mensagens de erro da API sempre em pt_BR (i18n/messages_pt_BR.properties)
+  web:
+    locale: pt_BR
+    locale-resolver: fixed
   security:
     oauth2:
       resourceserver:
