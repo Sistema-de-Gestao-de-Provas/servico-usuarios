@@ -8,6 +8,7 @@ import com.sgp.servico_usuarios.api.dto.request.UniversidadeRequest;
 import com.sgp.servico_usuarios.api.dto.response.UniversidadeResponse;
 import com.sgp.servico_usuarios.domain.entity.Universidade;
 import com.sgp.servico_usuarios.domain.repository.UniversidadeRepository;
+import com.sgp.servico_usuarios.domain.repository.specification.UniversidadeSpecification;
 import java.time.LocalDateTime;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
@@ -28,15 +29,20 @@ public class UniversidadeService {
     private final ModelMapper modelMapper;
 
     @Transactional(readOnly = true)
-    public Page<UniversidadeResponse> listar(Pageable pageable) {
-        return universidadeRepository.findAllByDeletadoEmIsNull(pageable).map(this::toResponse);
+    public Page<UniversidadeResponse> listar(
+            String nome,
+            String cidade,
+            String estado,
+            Pageable pageable) {
+        return universidadeRepository.findAll(UniversidadeSpecification.filtrar(nome, cidade, estado), pageable)
+                .map(this::toResponse);
     }
 
     @Transactional(readOnly = true)
     public UniversidadeResponse buscarPorId(Long id) {
         return toResponse(buscarOuFalhar(id));
     }
-    
+
     public Universidade buscarOuFalhar(Long id) {
         return universidadeRepository.findByIdAndDeletadoEmIsNull(id)
                 .orElseThrow(() -> new RecursoNaoEncontradoException("universidade.nao-encontrada", String.valueOf(id)));

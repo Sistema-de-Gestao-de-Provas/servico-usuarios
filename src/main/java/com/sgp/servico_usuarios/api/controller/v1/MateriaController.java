@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -33,10 +34,11 @@ public class MateriaController {
 
     private final MateriaService materiaService;
 
-    // Ex.: GET /v1/materias?page=0&size=20&sort=nome,asc
     @GetMapping
-    public PagedModel<MateriaResponse> listar(@PageableDefault(size = 50, sort = "nome") Pageable pageable) {
-        return new PagedModel<>(materiaService.listar(pageable));
+    public PagedModel<MateriaResponse> listar(
+            @RequestParam(required = false) String nome,
+            @PageableDefault(size = 50, sort = "nome") Pageable pageable) {
+        return new PagedModel<>(materiaService.listar(nome, pageable));
     }
 
     @GetMapping("/{id}")

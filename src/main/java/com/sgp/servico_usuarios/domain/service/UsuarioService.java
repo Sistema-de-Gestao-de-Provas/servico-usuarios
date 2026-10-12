@@ -14,6 +14,7 @@ import com.sgp.servico_usuarios.domain.entity.Endereco;
 import com.sgp.servico_usuarios.domain.entity.Usuario;
 import com.sgp.servico_usuarios.domain.enums.Permissao;
 import com.sgp.servico_usuarios.domain.repository.UsuarioRepository;
+import com.sgp.servico_usuarios.domain.repository.specification.UsuarioSpecification;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Page;
@@ -40,8 +41,15 @@ public class UsuarioService {
     private final ModelMapper modelMapper;
 
     @Transactional(readOnly = true)
-    public Page<UsuarioResponse> listar(Pageable pageable) {
-        return usuarioRepository.findAllByDeletadoEmIsNull(pageable).map(this::toResponse);
+    public Page<UsuarioResponse> listar(
+            String nome,
+            String email,
+            String cpf,
+            Permissao permissao,
+            Long universidadeId,
+            Pageable pageable) {
+        return usuarioRepository.findAll(UsuarioSpecification.filtrar(nome, email, cpf, permissao, universidadeId),
+                pageable).map(this::toResponse);
     }
 
     @Transactional(readOnly = true)
@@ -49,16 +57,16 @@ public class UsuarioService {
         return toResponse(buscarOuFalhar(id));
     }
 
-    private Usuario buscarOuFalhar(Long id) {
-        return usuarioRepository.findByIdAndDeletadoEmIsNull(id)
-                .orElseThrow(() -> new RecursoNaoEncontradoException("usuario.nao-encontrado", String.valueOf(id)));
-    }
-
     @Transactional(readOnly = true)
     public UsuarioResponse buscarPorKeycloakId(UUID keycloakId) {
         Usuario usuario = usuarioRepository.findByKeycloakIdAndDeletadoEmIsNull(keycloakId)
                 .orElseThrow(() -> new RecursoNaoEncontradoException("usuario.sem-cadastro"));
         return toResponse(usuario);
+    }
+
+    private Usuario buscarOuFalhar(Long id) {
+        return usuarioRepository.findByIdAndDeletadoEmIsNull(id)
+                .orElseThrow(() -> new RecursoNaoEncontradoException("usuario.nao-encontrado", String.valueOf(id)));
     }
 
     @Transactional

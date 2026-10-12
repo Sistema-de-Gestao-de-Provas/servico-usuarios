@@ -9,6 +9,7 @@ import com.sgp.servico_usuarios.api.dto.request.MateriaRequest;
 import com.sgp.servico_usuarios.api.dto.response.MateriaResponse;
 import com.sgp.servico_usuarios.domain.entity.Materia;
 import com.sgp.servico_usuarios.domain.repository.MateriaRepository;
+import com.sgp.servico_usuarios.domain.repository.specification.MateriaSpecification;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Page;
@@ -33,8 +34,8 @@ public class MateriaService {
     private final ModelMapper modelMapper;
 
     @Transactional(readOnly = true)
-    public Page<MateriaResponse> listar(Pageable pageable) {
-        return materiaRepository.findAllByDeletadoEmIsNull(pageable).map(this::toResponse);
+    public Page<MateriaResponse> listar(String nome, Pageable pageable) {
+        return materiaRepository.findAll(MateriaSpecification.filtrar(nome), pageable).map(this::toResponse);
     }
 
     @Transactional(readOnly = true)

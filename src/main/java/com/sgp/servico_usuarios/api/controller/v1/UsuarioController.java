@@ -23,6 +23,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -37,10 +38,16 @@ public class UsuarioController {
 
     private final UsuarioService usuarioService;
 
-    // Ex.: GET /v1/usuarios?page=0&size=20&sort=nome,asc
+    // Ex.: GET /v1/usuarios?nome=maria&permissao=PROFESSOR&universidadeId=1&page=0&size=20&sort=nome,asc
     @GetMapping
-    public PagedModel<UsuarioResponse> listar(@PageableDefault(sort = "nome") Pageable pageable) {
-        return new PagedModel<>(usuarioService.listar(pageable));
+    public PagedModel<UsuarioResponse> listar(
+            @RequestParam(required = false) String nome,
+            @RequestParam(required = false) String email,
+            @RequestParam(required = false) String cpf,
+            @RequestParam(required = false) Permissao permissao,
+            @RequestParam(required = false) Long universidadeId,
+            @PageableDefault(sort = "nome") Pageable pageable) {
+        return new PagedModel<>(usuarioService.listar(nome, email, cpf, permissao, universidadeId, pageable));
     }
 
     // Dados do usuário dono do token

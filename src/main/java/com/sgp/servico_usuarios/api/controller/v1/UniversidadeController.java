@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -33,10 +34,14 @@ public class UniversidadeController {
 
     private final UniversidadeService universidadeService;
 
-    // Ex.: GET /v1/universidades?page=0&size=20&sort=nome,asc
+    // Ex.: GET /v1/universidades?nome=federal&cidade=curitiba&estado=PR&page=0&size=20&sort=nome,asc
     @GetMapping
-    public PagedModel<UniversidadeResponse> listar(@PageableDefault(size = 50, sort = "nome") Pageable pageable) {
-        return new PagedModel<>(universidadeService.listar(pageable));
+    public PagedModel<UniversidadeResponse> listar(
+            @RequestParam(required = false) String nome,
+            @RequestParam(required = false) String cidade,
+            @RequestParam(required = false) String estado,
+            @PageableDefault(size = 50, sort = "nome") Pageable pageable) {
+        return new PagedModel<>(universidadeService.listar(nome, cidade, estado, pageable));
     }
 
     @GetMapping("/{id}")
