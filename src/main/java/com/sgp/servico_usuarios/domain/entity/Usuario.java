@@ -21,8 +21,6 @@ import java.util.UUID;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import org.hibernate.annotations.SoftDelete;
-import org.hibernate.annotations.SoftDeleteType;
 
 /**
  *
@@ -32,7 +30,6 @@ import org.hibernate.annotations.SoftDeleteType;
 @Getter
 @Setter
 @NoArgsConstructor
-@SoftDelete(strategy = SoftDeleteType.TIMESTAMP, columnName = "deletado_em")
 public class Usuario extends EntidadeBase {
 
     @Column(name = "keycloak_id", nullable = false, unique = true, updatable = false)

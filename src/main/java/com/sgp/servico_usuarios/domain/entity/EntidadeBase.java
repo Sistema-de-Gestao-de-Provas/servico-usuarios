@@ -10,6 +10,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.MappedSuperclass;
 import java.time.LocalDateTime;
 import lombok.Getter;
+import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
@@ -32,4 +33,8 @@ public abstract class EntidadeBase {
     @UpdateTimestamp
     @Column(name = "atualizado_em")
     private LocalDateTime atualizadoEm;
+
+    @Setter
+    @Column(name = "deletado_em")
+    private LocalDateTime deletadoEm;
 }

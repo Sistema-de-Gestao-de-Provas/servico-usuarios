@@ -8,8 +8,6 @@ import jakarta.persistence.Entity;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import org.hibernate.annotations.SoftDelete;
-import org.hibernate.annotations.SoftDeleteType;
 
 /**
  *
@@ -19,7 +17,6 @@ import org.hibernate.annotations.SoftDeleteType;
 @Getter
 @Setter
 @NoArgsConstructor
-@SoftDelete(strategy = SoftDeleteType.TIMESTAMP, columnName = "deletado_em")
 public class Materia extends EntidadeBase {
 
     @Column(nullable = false, unique = true, length = 100)
