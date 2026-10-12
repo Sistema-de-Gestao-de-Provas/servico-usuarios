@@ -4,6 +4,7 @@
 package com.sgp.servico_usuarios.domain.service;
 
 import com.sgp.servico_usuarios.api.dto.request.UsuarioRequest;
+import com.sgp.servico_usuarios.client.keycloak.KeycloakAdminClient;
 import com.sgp.servico_usuarios.api.dto.response.UsuarioResponse;
 import com.sgp.servico_usuarios.domain.entity.Endereco;
 import com.sgp.servico_usuarios.domain.entity.Usuario;
@@ -16,6 +17,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
@@ -32,6 +34,7 @@ public class UsuarioService {
     private final UsuarioRepository usuarioRepository;
     private final UniversidadeService universidadeService;
     private final MateriaService materiaService;
+    private final KeycloakAdminClient keycloakAdminClient;
     private final ModelMapper modelMapper;
 
     @Transactional(readOnly = true)
@@ -56,11 +59,13 @@ public class UsuarioService {
         return toResponse(usuario);
     }
 
-    // O usuário já existe no Keycloak; aqui é gravado o perfil dele, ligado pelo keycloakId (sub do token)
     @Transactional
-    public UsuarioResponse criar(UsuarioRequest request, UUID keycloakId, Permissao permissao) {
-        if (usuarioRepository.existsByKeycloakId(keycloakId)) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "O usuário autenticado já possui cadastro");
+    public UsuarioResponse criar(UsuarioRequest request, boolean solicitanteAdmin) {
+        if (request.getPermissao() != null && !solicitanteAdmin) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Apenas administradores podem definir a permissão");
+        }
+        if (!StringUtils.hasText(request.getSenha())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "A senha é obrigatória no cadastro");
         }
         if (usuarioRepository.existsByEmail(request.getEmail())) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Já existe um usuário com o e-mail " + request.getEmail());
@@ -68,11 +73,21 @@ public class UsuarioService {
         if (usuarioRepository.existsByCpf(request.getCpf())) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Já existe um usuário com o CPF " + request.getCpf());
         }
-        Usuario usuario = new Usuario();
-        usuario.setKeycloakId(keycloakId);
-        usuario.setPermissao(permissao);
-        aplicarRequest(usuario, request);
-        return toResponse(usuarioRepository.save(usuario));
+        Permissao permissao = request.getPermissao() != null ? request.getPermissao() : Permissao.PROFESSOR;
+
+        UUID keycloakId = keycloakAdminClient.criarUsuario(request.getNome(), request.getEmail(), request.getSenha());
+        try {
+            keycloakAdminClient.atribuirRole(keycloakId, permissao.name());
+
+            Usuario usuario = new Usuario();
+            usuario.setKeycloakId(keycloakId);
+            usuario.setPermissao(permissao);
+            aplicarRequest(usuario, request);
+            return toResponse(usuarioRepository.saveAndFlush(usuario));
+        } catch (RuntimeException ex) {
+            keycloakAdminClient.removerUsuario(keycloakId);
+            throw ex;
+        }
     }
 
     @Transactional
@@ -85,7 +100,11 @@ public class UsuarioService {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Já existe um usuário com o CPF " + request.getCpf());
         }
         aplicarRequest(usuario, request);
-        return toResponse(usuarioRepository.save(usuario));
+        // O banco é gravado antes do Keycloak: se o Keycloak falhar, a transação desfaz a alteração no banco
+        usuarioRepository.saveAndFlush(usuario);
+        keycloakAdminClient.atualizarUsuario(usuario.getKeycloakId(), usuario.getNome(), usuario.getEmail(),
+                StringUtils.hasText(request.getSenha()) ? request.getSenha() : null);
+        return toResponse(usuario);
     }
 
     @Transactional
@@ -96,7 +115,8 @@ public class UsuarioService {
         if (usuario.getEndereco() != null) {
             usuario.getEndereco().setDeletadoEm(agora);
         }
-        usuarioRepository.save(usuario);
+        usuarioRepository.saveAndFlush(usuario);
+        keycloakAdminClient.desativarUsuario(usuario.getKeycloakId());
     }
 
     private void aplicarRequest(Usuario usuario, UsuarioRequest request) {

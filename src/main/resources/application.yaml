@@ -29,7 +29,14 @@ spring:
     oauth2:
       resourceserver:
         jwt:
-          issuer-uri: ${KEYCLOAK_ISSUER_URI:http://localhost:8180/realms/sgp}
+          issuer-uri: ${keycloak.server-url}/realms/${keycloak.realm}
+
+keycloak:
+  server-url: ${KEYCLOAK_URL:http://localhost:8180}
+  realm: ${KEYCLOAK_REALM:sgp}
+  # Client confidencial usado para cadastrar usuários pela Admin API
+  client-id: ${KEYCLOAK_CLIENT_ID:servico-usuarios}
+  client-secret: ${KEYCLOAK_CLIENT_SECRET}
 
 server:
   port: 8081
