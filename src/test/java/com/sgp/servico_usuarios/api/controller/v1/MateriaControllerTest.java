@@ -83,11 +83,11 @@ class MateriaControllerTest {
     }
 
     @Test
-    void listarDeveExigirAutenticacao() throws Exception {
-        mockMvc.perform(get("/v1/materias"))
-                .andExpect(status().isUnauthorized());
+    void listarDeveSerPublicoParaOCadastro() throws Exception {
+        when(materiaService.listar(any(), any())).thenReturn(new PageImpl<>(List.of()));
 
-        verifyNoInteractions(materiaService);
+        mockMvc.perform(get("/v1/materias"))
+                .andExpect(status().isOk());
     }
 
     @Test

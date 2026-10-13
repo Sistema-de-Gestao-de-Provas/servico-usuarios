@@ -90,11 +90,11 @@ class UniversidadeControllerTest {
     }
 
     @Test
-    void listarDeveExigirAutenticacao() throws Exception {
-        mockMvc.perform(get("/v1/universidades"))
-                .andExpect(status().isUnauthorized());
+    void listarDeveSerPublicoParaOCadastro() throws Exception {
+        when(universidadeService.listar(any(), any(), any(), any())).thenReturn(new PageImpl<>(List.of()));
 
-        verifyNoInteractions(universidadeService);
+        mockMvc.perform(get("/v1/universidades"))
+                .andExpect(status().isOk());
     }
 
     @Test
